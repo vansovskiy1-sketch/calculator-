@@ -107,6 +107,19 @@ function renderForm() {
           <input id="wins" type="number" min="1" max="1000" step="1" value="${state.values.wins}">
           <small>${s === 'calibration' ? 'Цена за одну победу' : 'Цена за одну победу с клиентом'}</small>
         </div>
+        <div class="field full">
+          <label>Дополнительные условия</label>
+          <div class="checks">
+            ${s === 'party' ? check('doubles_before_5620', 'Даблы до 5620', '+50% к фиксу', state.addons.doubles_before_5620) : ''}
+            ${check('doubles', 'Даблы после 5620', '+30% к фиксу', state.addons.doubles)}
+            ${check('core', 'Кор роль после 5620', '+30% к фиксу', state.addons.core)}
+            ${check('smurfpool', 'Смурфпулл (от 3500 MMR)', '+15% к фиксу', state.addons.smurfpool)}
+            ${check('low_0_4', 'Лоу поряда 0–4k (поряда < 6k)', '+15% к фиксу', state.addons.low_0_4)}
+            ${check('low_4_6', 'Лоу поряда 4–6k (поряда < 8k)', '+15% к фиксу', state.addons.low_4_6)}
+            ${check('low_6_plus', 'Лоу поряда 6k+ (поряда < 9k)', '+15% к фиксу', state.addons.low_6_plus)}
+            ${check('smurf_account', 'Смурфпулл аккаунт (от 3500 MMR)', '+15% к фиксу', state.addons.smurf_account)}
+          </div>
+        </div>
       </div>`;
   }
 
@@ -212,13 +225,19 @@ function calculate() {
     const m = Math.max(0, Number(state.values.mmr) || 0);
     const wins = Math.max(0, Number(state.values.wins) || 0);
     const rate = rateFor(m, SERVICES[state.service].rates);
-    total = rate * wins;
+    const base = rate * wins;
+    const pct = state.service === 'party'
+      ? D2Pricing.partyAddonPercent(m, state.addons)
+      : D2Pricing.standardAddonPercent(m, state.addons);
+    const surcharge = base * pct;
+    total = base + surcharge;
     chip = `${money(rate)} / вин`;
     rows = [
       ['MMR клиента', mmr(m)],
       ['Ставка', `${money(rate)} / вин`],
       ['Количество вин', wins.toLocaleString('ru-RU')],
-      ['Формула', `${money(rate)} × ${wins}`]
+      ['Наценка', pct ? `+${Math.round(pct * 100)}%` : 'Нет'],
+      ['Доплата', money(surcharge)]
     ];
     note = wins > 0 ? `Итог рассчитан по ставке для ${m.toLocaleString('ru-RU')} MMR.` : 'Укажите количество побед.';
   }
