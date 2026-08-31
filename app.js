@@ -22,6 +22,16 @@ const SERVICES = {
   battlecup: { title: 'Боевой кубок', rates: null, unit: '₽ / заказ' }
 };
 
+const ADDONS = [
+  ['doubles', 'Двойной жетон победы', (service) => service === 'party' ? 'до 5620: +50% · выше 5620: +30%' : 'выше 5620: +30%'],
+  ['core', 'Кор роль после 5620', () => '+30% к фиксу'],
+  ['smurfpool', 'Смурфпулл', () => 'от 3500 MMR: +15% к фиксу'],
+  ['low_0_4', 'Низкая порядочность 0–4k', () => 'поряда < 6k: +15% к фиксу'],
+  ['low_4_6', 'Низкая порядочность 4–6k', () => 'поряда < 8k: +15% к фиксу'],
+  ['low_6_plus', 'Низкая порядочность 6k+', () => 'поряда < 9k: +15% к фиксу'],
+  ['smurf_account', 'Смурфпулл аккаунт', () => 'от 3500 MMR: +15% к фиксу']
+];
+
 const state = {
   service: 'solo',
   values: { current: 1000, target: 3000, mmr: 3000, wins: 10, hours: 1, tier: 3 },
@@ -42,20 +52,33 @@ function rateFor(mmrValue, rates) {
 }
 
 function progressivePrice(from, to, rates) {
-  let a = Math.min(Number(from) || 0, Number(to) || 0);
-  let b = Math.max(Number(from) || 0, Number(to) || 0);
+  const a = Math.min(Number(from) || 0, Number(to) || 0);
+  const b = Math.max(Number(from) || 0, Number(to) || 0);
   if (b <= a) return 0;
-  let total = 0;
-  for (const [low, high, rate] of rates) {
+  return rates.reduce((total, [low, high, rate]) => {
     const start = Math.max(a, low);
     const end = Math.min(b, high);
-    if (end > start) total += ((end - start) / 100) * rate;
-  }
-  return total;
+    return end > start ? total + ((end - start) / 100) * rate : total;
+  }, 0);
 }
 
 function optionList(items) {
   return items.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
+}
+
+function renderAddonOptions(service) {
+  return ADDONS.map(([id, title, description]) => `
+    <label class="option">
+      <span class="option-copy">
+        <span class="option-title">${title}</span>
+        <span class="option-desc">${description(service)}</span>
+      </span>
+      <span class="switch">
+        <input type="checkbox" data-addon="${id}" role="switch" aria-label="${title}" ${state.addons[id] ? 'checked aria-checked="true"' : 'aria-checked="false"'}>
+        <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+      </span>
+    </label>
+  `).join('');
 }
 
 function renderForm() {
@@ -77,31 +100,23 @@ function renderForm() {
           <input id="target" type="number" min="1" max="9500" step="1" value="${state.values.target}">
           <small>Конечный MMR</small>
         </div>
-        <div class="field full">
-          <label>Опции</label>
-          <div class="checks">
-            ${s === 'party'
-              ? check('doubles', 'Двойной жетон победы', 'до 5620: +50% · выше 5620: +30%', state.addons.doubles)
-              : check('doubles', 'Двойной жетон победы', 'выше 5620: +30% к фиксу', state.addons.doubles)}
-            ${check('core', 'Кор роль после 5620', '+30% к фиксу', state.addons.core)}
-            ${check('smurfpool', 'Смурфпулл', 'от 3500 MMR: +15% к фиксу', state.addons.smurfpool)}
-            ${check('low_0_4', 'Низкая порядочность 0–4k', 'поряда < 6k: +15% к фиксу', state.addons.low_0_4)}
-            ${check('low_4_6', 'Низкая порядочность 4–6k', 'поряда < 8k: +15% к фиксу', state.addons.low_4_6)}
-            ${check('low_6_plus', 'Низкая порядочность 6k+', 'поряда < 9k: +15% к фиксу', state.addons.low_6_plus)}
-            ${check('smurf_account', 'Смурфпулл аккаунт', 'от 3500 MMR: +15% к фиксу', state.addons.smurf_account)}
+        <div class="field full option-section">
+          <div class="option-heading">
+            <span class="option-heading-label">Дополнительные условия</span>
+            <span class="option-heading-hint">Включайте только нужные</span>
           </div>
+          <div class="options">${renderAddonOptions('solo')}</div>
         </div>
       </div>`;
   }
 
   if (s === 'party' || s === 'calibration') {
     const label = s === 'party' ? 'MMR клиента' : 'MMR аккаунта';
-    const max = 9500;
     $('#formArea').innerHTML = `
       <div class="form-grid">
         <div class="field">
           <label for="mmr">${label}</label>
-          <input id="mmr" type="number" min="0" max="${max}" step="1" value="${state.values.mmr}">
+          <input id="mmr" type="number" min="0" max="9500" step="1" value="${state.values.mmr}">
           <small>По этому MMR выбирается ставка</small>
         </div>
         <div class="field">
@@ -109,19 +124,12 @@ function renderForm() {
           <input id="wins" type="number" min="1" max="1000" step="1" value="${state.values.wins}">
           <small>${s === 'calibration' ? 'Цена за одну победу' : 'Цена за одну победу с клиентом'}</small>
         </div>
-        <div class="field full">
-          <label>Опции</label>
-          <div class="checks">
-            ${s === 'party'
-              ? check('doubles', 'Двойной жетон победы', 'до 5620: +50% · выше 5620: +30%', state.addons.doubles)
-              : check('doubles', 'Двойной жетон победы', 'выше 5620: +30% к фиксу', state.addons.doubles)}
-            ${check('core', 'Кор роль после 5620', '+30% к фиксу', state.addons.core)}
-            ${check('smurfpool', 'Смурфпулл', 'от 3500 MMR: +15% к фиксу', state.addons.smurfpool)}
-            ${check('low_0_4', 'Низкая порядочность 0–4k', 'поряда < 6k: +15% к фиксу', state.addons.low_0_4)}
-            ${check('low_4_6', 'Низкая порядочность 4–6k', 'поряда < 8k: +15% к фиксу', state.addons.low_4_6)}
-            ${check('low_6_plus', 'Низкая порядочность 6k+', 'поряда < 9k: +15% к фиксу', state.addons.low_6_plus)}
-            ${check('smurf_account', 'Смурфпулл аккаунт', 'от 3500 MMR: +15% к фиксу', state.addons.smurf_account)}
+        <div class="field full option-section">
+          <div class="option-heading">
+            <span class="option-heading-label">Дополнительные условия</span>
+            <span class="option-heading-hint">Включайте только нужные</span>
           </div>
+          <div class="options">${renderAddonOptions(s)}</div>
         </div>
       </div>`;
   }
@@ -148,6 +156,7 @@ function renderForm() {
         <div class="field full">
           <label for="tier">Тир боевого кубка</label>
           <select id="tier">${optionList([[3,'3 тир — 200 ₽'],[4,'4 тир — 250 ₽'],[5,'5 тир — 300 ₽'],[6,'6 тир — 400 ₽'],[7,'7 тир — 500 ₽'],[8,'8 тир — 1 000 ₽']])}</select>
+          <small>Услуга с передачей аккаунта</small>
         </div>
       </div>`;
     $('#tier').value = state.values.tier;
@@ -156,12 +165,8 @@ function renderForm() {
   bindFormEvents();
 }
 
-function check(id, title, desc, checked) {
-  return `<label class="check"><span class="check-copy"><strong>${title}</strong><em>${desc}</em></span><span class="switch"><input type="checkbox" data-addon="${id}" ${checked ? 'checked' : ''}><span class="switch-track"><span class="switch-thumb"></span></span></span></label>`;
-}
-
 function bindFormEvents() {
-  document.querySelectorAll('#formArea input, #formArea select').forEach(el => {
+  document.querySelectorAll('#formArea input, #formArea select').forEach((el) => {
     el.addEventListener('input', handleInput);
     el.addEventListener('change', handleInput);
   });
@@ -169,26 +174,12 @@ function bindFormEvents() {
 
 function handleInput(e) {
   const el = e.target;
-  if (el.dataset.addon) state.addons[el.dataset.addon] = el.checked;
+  if (el.dataset.addon) {
+    state.addons[el.dataset.addon] = el.checked;
+    el.setAttribute('aria-checked', String(el.checked));
+  }
   if (el.id in state.values) state.values[el.id] = Number(el.value);
   calculate();
-}
-
-function activeAddonPercent() {
-  return Object.values(state.addons).filter(Boolean).reduce((sum, yes) => sum + (yes ? 0.15 : 0), 0);
-}
-
-function soloAddonPercent(from, to) {
-  const maxMmr = Math.max(Number(from) || 0, Number(to) || 0);
-  let pct = 0;
-  if (maxMmr >= 5620 && state.addons.doubles) pct += 0.30;
-  if (maxMmr >= 5620 && state.addons.core) pct += 0.30;
-  if (maxMmr >= 3500 && state.addons.smurfpool) pct += 0.15;
-  if (maxMmr >= 0 && maxMmr <= 4000 && state.addons.low_0_4) pct += 0.15;
-  if (maxMmr > 4000 && maxMmr <= 6000 && state.addons.low_4_6) pct += 0.15;
-  if (maxMmr > 6000 && state.addons.low_6_plus) pct += 0.15;
-  if (maxMmr >= 3500 && state.addons.smurf_account) pct += 0.15;
-  return pct;
 }
 
 function coachingRate(m) {
@@ -221,7 +212,7 @@ function calculate() {
       ['Наценка', pct ? `+${Math.round(pct * 100)}%` : 'Нет'],
       ['Доплата', money(surcharge)]
     ];
-    note = to <= from ? 'Укажите конечный MMR выше текущего.' : `Учтены ${countSoloBands(from, to)} ценовых ${plural(countSoloBands(from, to), 'диапазон', 'диапазона', 'диапазонов')}.`;
+    note = to <= from ? 'Укажите конечный MMR выше текущего.' : `Учтено ${countSoloBands(from, to)} ценовых ${plural(countSoloBands(from, to), 'диапазон', 'диапазона', 'диапазонов')}.`;
   }
 
   if (state.service === 'party' || state.service === 'calibration') {
@@ -265,18 +256,14 @@ function calculate() {
     const rate = battlecupRate(tier);
     total = rate;
     chip = `${money(rate)} / заказ`;
-    rows = [
-      ['Тир', `${tier} тир`],
-      ['Цена', money(rate)],
-      ['Передача аккаунта', 'Да']
-    ];
+    rows = [['Тир', `${tier} тир`], ['Цена', money(rate)], ['Передача аккаунта', 'Да']];
     note = 'Стоимость боевого кубка указана за один заказ.';
   }
 
   $('#chipPrice').textContent = chip;
   $('#totalPrice').textContent = money(total);
   $('#resultNote').textContent = note;
-  $('#summary').innerHTML = rows.map(([a,b], i) => `<div class="summary-row ${i === rows.length - 1 ? 'accent' : ''}"><span>${a}</span><strong>${b}</strong></div>`).join('');
+  $('#summary').innerHTML = rows.map(([label, value], i) => `<div class="summary-row ${i === rows.length - 1 ? 'accent' : ''}"><span>${label}</span><strong>${value}</strong></div>`).join('');
   updateTable();
 }
 
@@ -296,19 +283,13 @@ function updateTable() {
   const head = $('#priceTableHead');
   const body = $('#priceTableBody');
   $('#tableTitle').textContent = SERVICES[s].title === 'ММР буст' ? 'Ставки ММР буста' : `Прайс — ${SERVICES[s].title}`;
-  const hint = document.querySelector('.table-hint');
+  const hint = $('#tableHint');
 
-  if (s === 'solo') {
-    head.innerHTML = '<th>Диапазон MMR</th><th>Ставка</th>';
-    body.innerHTML = SOLO_RATES.map(([a,b,r]) => `<tr><td>${a.toLocaleString('ru-RU')}–${b.toLocaleString('ru-RU')}</td><td>${money(r)} / 100 MMR</td></tr>`).join('');
-    hint.textContent = '₽ / 100 MMR';
-    return;
-  }
-  if (s === 'party' || s === 'calibration') {
+  if (s === 'solo' || s === 'party' || s === 'calibration') {
     const rates = SERVICES[s].rates;
     head.innerHTML = '<th>Диапазон MMR</th><th>Ставка</th>';
-    body.innerHTML = rates.map(([a,b,r]) => `<tr><td>${a.toLocaleString('ru-RU')}–${b.toLocaleString('ru-RU')}</td><td>${money(r)} / вин</td></tr>`).join('');
-    hint.textContent = '₽ / вин';
+    body.innerHTML = rates.map(([a,b,r]) => `<tr><td>${a.toLocaleString('ru-RU')}–${b.toLocaleString('ru-RU')}</td><td>${money(r)} / ${s === 'solo' ? '100 MMR' : 'вин'}</td></tr>`).join('');
+    hint.textContent = s === 'solo' ? '₽ / 100 MMR' : '₽ / вин';
     return;
   }
   if (s === 'coaching') {
@@ -318,32 +299,40 @@ function updateTable() {
     return;
   }
   head.innerHTML = '<th>Тир</th><th>Цена</th><th>Услуга</th>';
-  body.innerHTML = [[3,200],[4,250],[5,300],[6,400],[7,500],[8,1000]].map(([t,r]) => `<tr><td>${t} тир</td><td>${money(r)}</td><td>С передачей аккаунта</td></tr>`).join('');
+  body.innerHTML = [[3,200],[4,250],[5,300],[6,400],[7,500],[8,1000]].map(([tier, price]) => `<tr><td>${tier}</td><td>${money(price)}</td><td>С передачей</td></tr>`).join('');
   hint.textContent = '₽ / заказ';
-}
-
-function bindTabs() {
-  document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.service = btn.dataset.service;
-    $('#copyStatus').textContent = '';
-    renderForm();
-    calculate();
-  }));
 }
 
 function reset() {
   state.service = 'solo';
   state.values = { current: 1000, target: 3000, mmr: 3000, wins: 10, hours: 1, tier: 3 };
   state.addons = {};
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.service === 'solo'));
+  document.querySelectorAll('.service-tab').forEach((tab) => {
+    const active = tab.dataset.service === 'solo';
+    tab.classList.toggle('active', active);
+    if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current');
+  });
   renderForm();
   calculate();
 }
 
+function bindTabs() {
+  document.querySelectorAll('.service-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      state.service = tab.dataset.service;
+      document.querySelectorAll('.service-tab').forEach((item) => {
+        const active = item === tab;
+        item.classList.toggle('active', active);
+        if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
+      });
+      renderForm();
+      calculate();
+    });
+  });
+}
+
 async function copyCalculation() {
-  const text = `Dota 2 — ${SERVICES[state.service].title}\n${$('#summary').innerText}\nИтого: ${$('#totalPrice').innerText}`;
+  const text = `${SERVICES[state.service].title}\n${$('#summary').innerText}\nИтого: ${$('#totalPrice').innerText}`;
   try {
     await navigator.clipboard.writeText(text);
     $('#copyStatus').textContent = 'Расчёт скопирован.';
