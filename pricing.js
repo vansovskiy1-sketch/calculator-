@@ -16,7 +16,7 @@
   function partyAddonPercent(mmrValue, addons) {
     const m = Number(mmrValue) || 0;
     const selected = addons || {};
-    return standardAddonPercent(m, selected) + (m < 5620 && selected.doubles_before_5620 ? 0.50 : 0);
+    return standardAddonPercent(m, selected) + (m < 5620 && selected.doubles ? 0.50 : 0);
   }
 
   global.D2Pricing = { standardAddonPercent, partyAddonPercent };

@@ -78,15 +78,17 @@ function renderForm() {
           <small>Конечный MMR</small>
         </div>
         <div class="field full">
-          <label>Дополнительные условия</label>
+          <label>Опции</label>
           <div class="checks">
-            ${check('doubles', 'Даблы после 5620', '+30% к фиксу', state.addons.doubles)}
+            ${s === 'party'
+              ? check('doubles', 'Двойной жетон победы', 'до 5620: +50% · выше 5620: +30%', state.addons.doubles)
+              : check('doubles', 'Двойной жетон победы', 'выше 5620: +30% к фиксу', state.addons.doubles)}
             ${check('core', 'Кор роль после 5620', '+30% к фиксу', state.addons.core)}
-            ${check('smurfpool', 'Смурфпулл (от 3500 MMR)', '+15% к фиксу', state.addons.smurfpool)}
-            ${check('low_0_4', 'Лоу поряда 0–4k (поряда < 6k)', '+15% к фиксу', state.addons.low_0_4)}
-            ${check('low_4_6', 'Лоу поряда 4–6k (поряда < 8k)', '+15% к фиксу', state.addons.low_4_6)}
-            ${check('low_6_plus', 'Лоу поряда 6k+ (поряда < 9k)', '+15% к фиксу', state.addons.low_6_plus)}
-            ${check('smurf_account', 'Смурфпулл аккаунт (от 3500 MMR)', '+15% к фиксу', state.addons.smurf_account)}
+            ${check('smurfpool', 'Смурфпулл', 'от 3500 MMR: +15% к фиксу', state.addons.smurfpool)}
+            ${check('low_0_4', 'Низкая порядочность 0–4k', 'поряда < 6k: +15% к фиксу', state.addons.low_0_4)}
+            ${check('low_4_6', 'Низкая порядочность 4–6k', 'поряда < 8k: +15% к фиксу', state.addons.low_4_6)}
+            ${check('low_6_plus', 'Низкая порядочность 6k+', 'поряда < 9k: +15% к фиксу', state.addons.low_6_plus)}
+            ${check('smurf_account', 'Смурфпулл аккаунт', 'от 3500 MMR: +15% к фиксу', state.addons.smurf_account)}
           </div>
         </div>
       </div>`;
@@ -108,16 +110,17 @@ function renderForm() {
           <small>${s === 'calibration' ? 'Цена за одну победу' : 'Цена за одну победу с клиентом'}</small>
         </div>
         <div class="field full">
-          <label>Дополнительные условия</label>
+          <label>Опции</label>
           <div class="checks">
-            ${s === 'party' ? check('doubles_before_5620', 'Даблы до 5620', '+50% к фиксу', state.addons.doubles_before_5620) : ''}
-            ${check('doubles', 'Даблы после 5620', '+30% к фиксу', state.addons.doubles)}
+            ${s === 'party'
+              ? check('doubles', 'Двойной жетон победы', 'до 5620: +50% · выше 5620: +30%', state.addons.doubles)
+              : check('doubles', 'Двойной жетон победы', 'выше 5620: +30% к фиксу', state.addons.doubles)}
             ${check('core', 'Кор роль после 5620', '+30% к фиксу', state.addons.core)}
-            ${check('smurfpool', 'Смурфпулл (от 3500 MMR)', '+15% к фиксу', state.addons.smurfpool)}
-            ${check('low_0_4', 'Лоу поряда 0–4k (поряда < 6k)', '+15% к фиксу', state.addons.low_0_4)}
-            ${check('low_4_6', 'Лоу поряда 4–6k (поряда < 8k)', '+15% к фиксу', state.addons.low_4_6)}
-            ${check('low_6_plus', 'Лоу поряда 6k+ (поряда < 9k)', '+15% к фиксу', state.addons.low_6_plus)}
-            ${check('smurf_account', 'Смурфпулл аккаунт (от 3500 MMR)', '+15% к фиксу', state.addons.smurf_account)}
+            ${check('smurfpool', 'Смурфпулл', 'от 3500 MMR: +15% к фиксу', state.addons.smurfpool)}
+            ${check('low_0_4', 'Низкая порядочность 0–4k', 'поряда < 6k: +15% к фиксу', state.addons.low_0_4)}
+            ${check('low_4_6', 'Низкая порядочность 4–6k', 'поряда < 8k: +15% к фиксу', state.addons.low_4_6)}
+            ${check('low_6_plus', 'Низкая порядочность 6k+', 'поряда < 9k: +15% к фиксу', state.addons.low_6_plus)}
+            ${check('smurf_account', 'Смурфпулл аккаунт', 'от 3500 MMR: +15% к фиксу', state.addons.smurf_account)}
           </div>
         </div>
       </div>`;
@@ -154,7 +157,7 @@ function renderForm() {
 }
 
 function check(id, title, desc, checked) {
-  return `<label class="check"><input type="checkbox" data-addon="${id}" ${checked ? 'checked' : ''}><span><strong>${title}</strong><em>${desc}</em></span></label>`;
+  return `<label class="check"><span class="check-copy"><strong>${title}</strong><em>${desc}</em></span><span class="switch"><input type="checkbox" data-addon="${id}" ${checked ? 'checked' : ''}><span class="switch-track"><span class="switch-thumb"></span></span></span></label>`;
 }
 
 function bindFormEvents() {

@@ -93,13 +93,24 @@ button { cursor: pointer; }
 
 .checks { display: grid; gap: 8px; }
 .check {
-  display: flex; align-items: center; gap: 10px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.025); transition: .2s ease;
+  min-height: 72px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 16px; border: 1px solid var(--line); border-radius: 11px;
+  background: rgba(255,255,255,.02); transition: border-color .2s ease, background .2s ease, transform .15s ease;
+  cursor: pointer;
 }
-.check:hover { border-color: var(--line-strong); }
-.check input { accent-color: var(--accent); width: 16px; height: 16px; }
-.check span { display: grid; gap: 2px; }
-.check strong { font-size: 13px; }
-.check em { font-style: normal; color: var(--muted); font-size: 11px; }
+.check:hover { border-color: var(--line-strong); background: rgba(255,255,255,.035); }
+.check:has(input:checked) { border-color: rgba(231,138,99,.32); background: rgba(201,90,77,.06); }
+.check-copy { display: grid; gap: 3px; min-width: 0; }
+.check strong { font-size: 13px; line-height: 1.2; }
+.check em { font-style: normal; color: #687384; font-size: 11px; line-height: 1.25; }
+.switch { position: relative; width: 36px; height: 22px; flex: 0 0 auto; display: block; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 2; }
+.switch-track { position: absolute; inset: 0; display: block; border-radius: 999px; background: #24282d; border: 1px solid rgba(255,255,255,.05); transition: .2s ease; }
+.switch-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #f7f8fa; transition: transform .2s ease; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.switch input:checked + .switch-track { background: var(--accent); border-color: rgba(255,255,255,.08); }
+.switch input:checked + .switch-track .switch-thumb { transform: translateX(14px); }
+.switch input:focus-visible + .switch-track { box-shadow: 0 0 0 3px rgba(231,138,99,.18); }
 
 .total { margin-top: 10px; font-size: clamp(38px, 6vw, 56px); font-weight: 900; letter-spacing: -.05em; line-height: 1; }
 .result-note { color: var(--muted); font-size: 12px; margin-top: 12px; min-height: 18px; }
