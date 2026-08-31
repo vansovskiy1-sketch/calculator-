@@ -1,23 +1,23 @@
-(function attachPricing(global) {
-  function standardAddonPercent(mmrValue, addons) {
+(function (global) {
+  function addonPercent(mmrValue, addons, mode) {
     const m = Number(mmrValue) || 0;
-    const selected = addons || {};
+    const a = addons || {};
     let pct = 0;
-    if (m >= 5620 && selected.doubles) pct += 0.30;
-    if (m >= 5620 && selected.core) pct += 0.30;
-    if (m >= 3500 && selected.smurfpool) pct += 0.15;
-    if (m <= 4000 && selected.low_0_4) pct += 0.15;
-    if (m > 4000 && m <= 6000 && selected.low_4_6) pct += 0.15;
-    if (m > 6000 && selected.low_6_plus) pct += 0.15;
-    if (m >= 3500 && selected.smurf_account) pct += 0.15;
+
+    if (a.doubles && mode === 'party' && m < 5620) pct += 0.50;
+    else if (a.doubles && m >= 5620) pct += 0.30;
+
+    if (a.core && m >= 5620) pct += 1.00;
+    if (a.smurfpool && m >= 3500) pct += 0.15;
+    if (a.smurfAccount && m >= 3500) pct += 0.15;
+    if (a.lowOrder && m < 9000) pct += 0.20;
+    if (a.lowCourtesy && m < 8000) pct += m < 6000 ? 0.20 : 0.10;
+
     return pct;
   }
 
-  function partyAddonPercent(mmrValue, addons) {
-    const m = Number(mmrValue) || 0;
-    const selected = addons || {};
-    return standardAddonPercent(m, selected) + (m < 5620 && selected.doubles ? 0.50 : 0);
-  }
-
-  global.D2Pricing = { standardAddonPercent, partyAddonPercent };
+  global.D2Pricing = {
+    standardAddonPercent: (mmr, addons) => addonPercent(mmr, addons, 'standard'),
+    partyAddonPercent: (mmr, addons) => addonPercent(mmr, addons, 'party')
+  };
 })(window);

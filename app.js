@@ -1,348 +1,42 @@
-const SOLO_RATES = [
-  [0, 2000, 125], [2000, 3000, 150], [3000, 3500, 185], [3500, 4000, 250],
-  [4000, 4500, 300], [4500, 5000, 330], [5000, 5620, 400], [5620, 6000, 700],
-  [6000, 6500, 900], [6500, 7000, 1200], [7000, 7500, 1500], [7500, 8000, 2000],
-  [8000, 8500, 3000], [8500, 9000, 6000], [9000, 9500, 10000]
-];
-const PARTY_RATES = [
-  [0, 2000, 70], [2000, 3000, 80], [3000, 4000, 90], [4000, 4500, 110], [4500, 5000, 150],
-  [5000, 5620, 180], [5620, 6000, 250], [6000, 6500, 400], [6500, 7000, 750], [7000, 7500, 1000],
-  [7500, 8000, 2000], [8000, 8500, 3000], [8500, 9000, 4000], [9000, 9500, 5000]
-];
-const CALIBRATION_RATES = [
-  [0, 2000, 55], [2000, 3000, 65], [3000, 4000, 75], [4000, 4500, 90], [4500, 5000, 100],
-  [5000, 5620, 135], [5620, 6000, 250], [6000, 6500, 300], [6500, 7000, 450], [7000, 7500, 600],
-  [7500, 8000, 1000], [8000, 8500, 2000], [8500, 9000, 3500], [9000, 9500, 5000]
-];
-const SERVICES = {
-  solo: { title: 'ММР буст', rates: SOLO_RATES, unit: '₽ / 100 MMR' },
-  party: { title: 'Пати буст', rates: PARTY_RATES, unit: '₽ / вин' },
-  calibration: { title: 'Калибровка', rates: CALIBRATION_RATES, unit: '₽ / вин' },
-  coaching: { title: 'Коучинг', rates: null, unit: '₽ / час' },
-  battlecup: { title: 'Боевой кубок', rates: null, unit: '₽ / заказ' }
-};
-
-const ADDONS = [
-  ['doubles', 'Двойной жетон победы', (service) => service === 'party' ? 'до 5620: +50% · выше 5620: +30%' : 'выше 5620: +30%'],
-  ['core', 'Кор роль после 5620', () => '+30% к фиксу'],
-  ['smurfpool', 'Смурфпулл', () => 'от 3500 MMR: +15% к фиксу'],
-  ['low_0_4', 'Низкая порядочность 0–4k', () => 'поряда < 6k: +15% к фиксу'],
-  ['low_4_6', 'Низкая порядочность 4–6k', () => 'поряда < 8k: +15% к фиксу'],
-  ['low_6_plus', 'Низкая порядочность 6k+', () => 'поряда < 9k: +15% к фиксу'],
-  ['smurf_account', 'Смурфпулл аккаунт', () => 'от 3500 MMR: +15% к фиксу']
-];
-
-const state = {
-  service: 'solo',
-  values: { current: 1000, target: 3000, mmr: 3000, wins: 10, hours: 1, tier: 3 },
-  addons: {}
-};
-
-const $ = (sel) => document.querySelector(sel);
-const money = (value) => `${Math.round(value).toLocaleString('ru-RU')} ₽`;
-const mmr = (value) => `${Math.round(value).toLocaleString('ru-RU')} MMR`;
-
-function rateFor(mmrValue, rates) {
-  const m = Number(mmrValue);
-  if (!rates) return 0;
-  for (const [from, to, rate] of rates) {
-    if (m >= from && m < to) return rate;
-  }
-  return m >= rates[rates.length - 1][1] ? rates[rates.length - 1][2] : rates[0][2];
-}
-
-function progressivePrice(from, to, rates) {
-  const a = Math.min(Number(from) || 0, Number(to) || 0);
-  const b = Math.max(Number(from) || 0, Number(to) || 0);
-  if (b <= a) return 0;
-  return rates.reduce((total, [low, high, rate]) => {
-    const start = Math.max(a, low);
-    const end = Math.min(b, high);
-    return end > start ? total + ((end - start) / 100) * rate : total;
-  }, 0);
-}
-
-function optionList(items) {
-  return items.map(([value, label]) => `<option value="${value}">${label}</option>`).join('');
-}
-
-function renderAddonOptions(service) {
-  return ADDONS.map(([id, title, description]) => `
-    <label class="option">
-      <span class="option-copy">
-        <span class="option-title">${title}</span>
-        <span class="option-desc">${description(service)}</span>
-      </span>
-      <span class="switch">
-        <input type="checkbox" data-addon="${id}" role="switch" aria-label="${title}" ${state.addons[id] ? 'checked aria-checked="true"' : 'aria-checked="false"'}>
-        <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
-      </span>
-    </label>
-  `).join('');
-}
-
-function renderForm() {
-  const s = state.service;
-  $('#serviceTitle').textContent = SERVICES[s].title;
-  $('#chipPrice').textContent = SERVICES[s].unit;
-  $('#formArea').innerHTML = '';
-
-  if (s === 'solo') {
-    $('#formArea').innerHTML = `
-      <div class="form-grid">
-        <div class="field">
-          <label for="current">Текущий MMR</label>
-          <input id="current" type="number" min="0" max="9500" step="1" value="${state.values.current}">
-          <small>Откуда начинается буст</small>
-        </div>
-        <div class="field">
-          <label for="target">Желаемый MMR</label>
-          <input id="target" type="number" min="1" max="9500" step="1" value="${state.values.target}">
-          <small>Конечный MMR</small>
-        </div>
-        <div class="field full option-section">
-          <div class="option-heading">
-            <span class="option-heading-label">Дополнительные условия</span>
-            <span class="option-heading-hint">Включайте только нужные</span>
-          </div>
-          <div class="options">${renderAddonOptions('solo')}</div>
-        </div>
-      </div>`;
-  }
-
-  if (s === 'party' || s === 'calibration') {
-    const label = s === 'party' ? 'MMR клиента' : 'MMR аккаунта';
-    $('#formArea').innerHTML = `
-      <div class="form-grid">
-        <div class="field">
-          <label for="mmr">${label}</label>
-          <input id="mmr" type="number" min="0" max="9500" step="1" value="${state.values.mmr}">
-          <small>По этому MMR выбирается ставка</small>
-        </div>
-        <div class="field">
-          <label for="wins">Количество вин</label>
-          <input id="wins" type="number" min="1" max="1000" step="1" value="${state.values.wins}">
-          <small>${s === 'calibration' ? 'Цена за одну победу' : 'Цена за одну победу с клиентом'}</small>
-        </div>
-        <div class="field full option-section">
-          <div class="option-heading">
-            <span class="option-heading-label">Дополнительные условия</span>
-            <span class="option-heading-hint">Включайте только нужные</span>
-          </div>
-          <div class="options">${renderAddonOptions(s)}</div>
-        </div>
-      </div>`;
-  }
-
-  if (s === 'coaching') {
-    $('#formArea').innerHTML = `
-      <div class="form-grid">
-        <div class="field">
-          <label for="mmr">MMR клиента</label>
-          <input id="mmr" type="number" min="0" max="12000" step="1" value="${state.values.mmr}">
-          <small>Ставка зависит от MMR</small>
-        </div>
-        <div class="field">
-          <label for="hours">Количество часов</label>
-          <input id="hours" type="number" min="0.5" max="100" step="0.5" value="${state.values.hours}">
-          <small>Можно указать половину часа</small>
-        </div>
-      </div>`;
-  }
-
-  if (s === 'battlecup') {
-    $('#formArea').innerHTML = `
-      <div class="form-grid">
-        <div class="field full">
-          <label for="tier">Тир боевого кубка</label>
-          <select id="tier">${optionList([[3,'3 тир — 200 ₽'],[4,'4 тир — 250 ₽'],[5,'5 тир — 300 ₽'],[6,'6 тир — 400 ₽'],[7,'7 тир — 500 ₽'],[8,'8 тир — 1 000 ₽']])}</select>
-          <small>Услуга с передачей аккаунта</small>
-        </div>
-      </div>`;
-    $('#tier').value = state.values.tier;
-  }
-
-  bindFormEvents();
-}
-
-function bindFormEvents() {
-  document.querySelectorAll('#formArea input, #formArea select').forEach((el) => {
-    el.addEventListener('input', handleInput);
-    el.addEventListener('change', handleInput);
-  });
-}
-
-function handleInput(e) {
-  const el = e.target;
-  if (el.dataset.addon) {
-    state.addons[el.dataset.addon] = el.checked;
-    el.setAttribute('aria-checked', String(el.checked));
-  }
-  if (el.id in state.values) state.values[el.id] = Number(el.value);
-  calculate();
-}
-
-function coachingRate(m) {
-  if (m >= 7000) return 700;
-  if (m >= 5630) return 500;
-  return 330;
-}
-
-function battlecupRate(tier) {
-  return ({3: 200, 4: 250, 5: 300, 6: 400, 7: 500, 8: 1000})[tier] || 0;
-}
-
-function calculate() {
-  let total = 0;
-  let rows = [];
-  let note = '';
-  let chip = SERVICES[state.service].unit;
-
-  if (state.service === 'solo') {
-    const from = Math.max(0, Number(state.values.current) || 0);
-    const to = Math.max(0, Number(state.values.target) || 0);
-    const base = progressivePrice(from, to, SOLO_RATES);
-    const pct = soloAddonPercent(from, to);
-    const surcharge = base * pct;
-    total = base + surcharge;
-    chip = `${money(rateFor(Math.max(from, to), SOLO_RATES))} / 100 MMR`;
-    rows = [
-      ['Маршрут', `${mmr(from)} → ${mmr(to)}`],
-      ['Базовая цена', money(base)],
-      ['Наценка', pct ? `+${Math.round(pct * 100)}%` : 'Нет'],
-      ['Доплата', money(surcharge)]
-    ];
-    note = to <= from ? 'Укажите конечный MMR выше текущего.' : `Учтено ${countSoloBands(from, to)} ценовых ${plural(countSoloBands(from, to), 'диапазон', 'диапазона', 'диапазонов')}.`;
-  }
-
-  if (state.service === 'party' || state.service === 'calibration') {
-    const m = Math.max(0, Number(state.values.mmr) || 0);
-    const wins = Math.max(0, Number(state.values.wins) || 0);
-    const rate = rateFor(m, SERVICES[state.service].rates);
-    const base = rate * wins;
-    const pct = state.service === 'party'
-      ? D2Pricing.partyAddonPercent(m, state.addons)
-      : D2Pricing.standardAddonPercent(m, state.addons);
-    const surcharge = base * pct;
-    total = base + surcharge;
-    chip = `${money(rate)} / вин`;
-    rows = [
-      ['MMR клиента', mmr(m)],
-      ['Ставка', `${money(rate)} / вин`],
-      ['Количество вин', wins.toLocaleString('ru-RU')],
-      ['Наценка', pct ? `+${Math.round(pct * 100)}%` : 'Нет'],
-      ['Доплата', money(surcharge)]
-    ];
-    note = wins > 0 ? `Итог рассчитан по ставке для ${m.toLocaleString('ru-RU')} MMR.` : 'Укажите количество побед.';
-  }
-
-  if (state.service === 'coaching') {
-    const m = Math.max(0, Number(state.values.mmr) || 0);
-    const hours = Math.max(0, Number(state.values.hours) || 0);
-    const rate = coachingRate(m);
-    total = rate * hours;
-    chip = `${money(rate)} / час`;
-    rows = [
-      ['MMR клиента', mmr(m)],
-      ['Ставка', `${money(rate)} / час`],
-      ['Количество часов', hours.toLocaleString('ru-RU')],
-      ['Формула', `${money(rate)} × ${hours}`]
-    ];
-    note = m >= 7000 ? 'Применена ставка для 7000+ MMR.' : m >= 5630 ? 'Применена ставка для 5630+ MMR.' : 'Применена базовая ставка до 5630 MMR.';
-  }
-
-  if (state.service === 'battlecup') {
-    const tier = Number(state.values.tier) || 3;
-    const rate = battlecupRate(tier);
-    total = rate;
-    chip = `${money(rate)} / заказ`;
-    rows = [['Тир', `${tier} тир`], ['Цена', money(rate)], ['Передача аккаунта', 'Да']];
-    note = 'Стоимость боевого кубка указана за один заказ.';
-  }
-
-  $('#chipPrice').textContent = chip;
-  $('#totalPrice').textContent = money(total);
-  $('#resultNote').textContent = note;
-  $('#summary').innerHTML = rows.map(([label, value], i) => `<div class="summary-row ${i === rows.length - 1 ? 'accent' : ''}"><span>${label}</span><strong>${value}</strong></div>`).join('');
-  updateTable();
-}
-
-function countSoloBands(from, to) {
-  return SOLO_RATES.filter(([low, high]) => Math.min(to, high) > Math.max(from, low)).length;
-}
-
-function plural(n, one, few, many) {
-  const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
-  return many;
-}
-
-function updateTable() {
-  const s = state.service;
-  const head = $('#priceTableHead');
-  const body = $('#priceTableBody');
-  $('#tableTitle').textContent = SERVICES[s].title === 'ММР буст' ? 'Ставки ММР буста' : `Прайс — ${SERVICES[s].title}`;
-  const hint = $('#tableHint');
-
-  if (s === 'solo' || s === 'party' || s === 'calibration') {
-    const rates = SERVICES[s].rates;
-    head.innerHTML = '<th>Диапазон MMR</th><th>Ставка</th>';
-    body.innerHTML = rates.map(([a,b,r]) => `<tr><td>${a.toLocaleString('ru-RU')}–${b.toLocaleString('ru-RU')}</td><td>${money(r)} / ${s === 'solo' ? '100 MMR' : 'вин'}</td></tr>`).join('');
-    hint.textContent = s === 'solo' ? '₽ / 100 MMR' : '₽ / вин';
-    return;
-  }
-  if (s === 'coaching') {
-    head.innerHTML = '<th>MMR</th><th>Ставка</th>';
-    body.innerHTML = '<tr><td>0–5629</td><td>330 ₽ / час</td></tr><tr><td>5630–6999</td><td>500 ₽ / час</td></tr><tr><td>7000+</td><td>700 ₽ / час</td></tr>';
-    hint.textContent = '₽ / час';
-    return;
-  }
-  head.innerHTML = '<th>Тир</th><th>Цена</th><th>Услуга</th>';
-  body.innerHTML = [[3,200],[4,250],[5,300],[6,400],[7,500],[8,1000]].map(([tier, price]) => `<tr><td>${tier}</td><td>${money(price)}</td><td>С передачей</td></tr>`).join('');
-  hint.textContent = '₽ / заказ';
-}
-
-function reset() {
-  state.service = 'solo';
-  state.values = { current: 1000, target: 3000, mmr: 3000, wins: 10, hours: 1, tier: 3 };
-  state.addons = {};
-  document.querySelectorAll('.service-tab').forEach((tab) => {
-    const active = tab.dataset.service === 'solo';
-    tab.classList.toggle('active', active);
-    if (active) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current');
-  });
-  renderForm();
-  calculate();
-}
-
-function bindTabs() {
-  document.querySelectorAll('.service-tab').forEach((tab) => {
-    tab.addEventListener('click', () => {
-      state.service = tab.dataset.service;
-      document.querySelectorAll('.service-tab').forEach((item) => {
-        const active = item === tab;
-        item.classList.toggle('active', active);
-        if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
-      });
-      renderForm();
-      calculate();
-    });
-  });
-}
-
-async function copyCalculation() {
-  const text = `${SERVICES[state.service].title}\n${$('#summary').innerText}\nИтого: ${$('#totalPrice').innerText}`;
-  try {
-    await navigator.clipboard.writeText(text);
-    $('#copyStatus').textContent = 'Расчёт скопирован.';
-  } catch {
-    $('#copyStatus').textContent = 'Не удалось скопировать — выделите текст вручную.';
-  }
-}
-
-$('#resetBtn').addEventListener('click', reset);
-$('#copyBtn').addEventListener('click', copyCalculation);
-bindTabs();
-renderForm();
-calculate();
+const SOLO_RATES=[[0,2000,125],[2000,3000,150],[3000,3500,185],[3500,4000,250],[4000,4500,300],[4500,5000,330],[5000,5620,400],[5620,6000,700],[6000,6500,900],[6500,7000,1200],[7000,7500,1500],[7500,8000,2000],[8000,8500,3000],[8500,9000,6000],[9000,9500,10000]];
+const PARTY_RATES=[[0,2000,70],[2000,3000,80],[3000,4000,90],[4000,4500,110],[4500,5000,150],[5000,5620,180],[5620,6000,250],[6000,6500,400],[6500,7000,750],[7000,7500,1000],[7500,8000,2000],[8000,8500,3000],[8500,9000,4000],[9000,9500,5000]];
+const CAL_RATES=[[0,2000,55],[2000,3000,65],[3000,4000,75],[4000,4500,90],[4500,5000,100],[5000,5620,135],[5620,6000,250],[6000,6500,300],[6500,7000,450],[7000,7500,600],[7500,8000,1000],[8000,8500,2000],[8500,9000,3500],[9000,9500,5000]];
+const SERVICES={solo:{title:'ММР буст',rates:SOLO_RATES,unit:'₽ / 100 MMR'},party:{title:'Пати буст',rates:PARTY_RATES,unit:'₽ / вин'},calibration:{title:'Калибровка',rates:CAL_RATES,unit:'₽ / вин'},coaching:{title:'Коучинг',rates:null,unit:'₽ / час'},battlecup:{title:'Боевой кубок',rates:null,unit:'₽ / заказ'}};
+const DEFAULT={current:1000,target:3000,mmr:3000,wins:10,hours:1,tier:3,order:10000,courtesy:10000};
+const state={service:'solo',values:{...DEFAULT},addons:{}};
+const $=s=>document.querySelector(s); const money=v=>`${Math.round(v).toLocaleString('ru-RU')} ₽`; const fmt=v=>Math.round(v).toLocaleString('ru-RU');
+const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
+function rateFor(m,rates){const mmm=Number(m)||0; if(!rates)return 0; const hit=rates.find(([a,b])=>mmm>=a&&mmm<b); return hit?hit[2]:mmm>=rates[rates.length-1][1]?rates[rates.length-1][2]:rates[0][2]}
+function progressive(a,b,rates){const from=Math.min(clamp(a,0,9500),clamp(b,0,9500)),to=Math.max(clamp(a,0,9500),clamp(b,0,9500));return rates.reduce((sum,[lo,hi,rate])=>sum+Math.max(0,Math.min(to,hi)-Math.max(from,lo))/100*rate,0)}
+function addonDefinitions(service){const defs=[
+ ['doubles','Двойной жетон победы',service==='party'?'до 5620: +50% · от 5620: +30%':'от 5620: +30%',m=>service==='party'?true:m>=5620],
+ ['core','Игра на кор роли','от 5620 MMR: +100%',m=>m>=5620],
+ ['smurfpool','Смурфпулл','от 3500 MMR: +15%',m=>m>=3500],
+ ['smurfAccount','Смурфпулл аккаунт','от 3500 MMR: +15%',m=>m>=3500],
+ ['lowOrder','Низкая порядность','ниже 9000 порядности: +20%',()=>true],
+ ['lowCourtesy','Низкая вежливость','6000–7999: +10% · ниже 6000: +20%',()=>true]
+ ]; return defs}
+function renderOptions(service,mmrValue){return addonDefinitions(service).map(([id,title,desc,eligible])=>{const enabled=eligible(Number(mmrValue)||0); const checked=!!state.addons[id]&&enabled; return `<label class="option ${enabled?'':'disabled-option'}"><span class="option-copy"><span class="option-title">${title}${enabled?'':'<span class="hint-badge">Недоступно</span>'}</span><span class="option-desc">${desc}</span></span><span class="switch"><input type="checkbox" data-addon="${id}" role="switch" ${checked?'checked':''} ${enabled?'':'disabled'} aria-label="${title}" aria-checked="${checked}"><span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span></span></label>`}).join('')}
+function renderFields(){const s=state.service;$('#serviceTitle').textContent=SERVICES[s].title; $('#chipPrice').textContent=SERVICES[s].unit;
+ if(s==='solo'){$('#formArea').innerHTML=`<div class="form-grid"><div class="field"><label for="current">Текущий MMR</label><input id="current" type="number" min="0" max="9500" value="${state.values.current}"><small>Точка старта буста</small></div><div class="field"><label for="target">Желаемый MMR</label><input id="target" type="number" min="1" max="9500" value="${state.values.target}"><small>Конечный MMR</small></div><div class="field"><div class="metric-row"><div class="metric"><span>Прибавка</span><strong id="metricMmr">—</strong></div><div class="metric"><span>Диапазоны</span><strong id="metricBands">—</strong></div></div></div><div class="field-help full">Цена ММР буста считается прогрессивно: каждый участок пути оплачивается по своей ставке.</div><div class="field full option-section"><div class="section-line"><strong>Дополнительные условия</strong><span>Включайте только нужные</span></div><div class="options">${renderOptions('solo',Math.max(state.values.current,state.values.target))}</div></div><div class="field"><label for="order">Порядность аккаунта</label><input id="order" type="number" min="0" max="12000" value="${state.values.order}"><small>ниже 9000 → +20%</small></div><div class="field"><label for="courtesy">Вежливость аккаунта</label><input id="courtesy" type="number" min="0" max="12000" value="${state.values.courtesy}"><small>ниже 6000 → +20% · 6000–7999 → +10%</small></div></div>`}
+ else if(s==='party'||s==='calibration'){const label=s==='party'?'MMR клиента':'MMR аккаунта';$('#formArea').innerHTML=`<div class="form-grid"><div class="field"><label for="mmr">${label}</label><input id="mmr" type="number" min="0" max="9500" value="${state.values.mmr}"><small>По этому MMR выбирается ставка</small></div><div class="field"><label for="wins">Количество вин</label><input id="wins" type="number" min="1" max="1000" value="${state.values.wins}"><small>${s==='party'?'Победы вместе с клиентом':'Победы при калибровке'}</small></div><div class="field full option-section"><div class="section-line"><strong>Дополнительные условия</strong><span>Наценка считается от всей суммы</span></div><div class="options">${renderOptions(s,state.values.mmr)}</div></div><div class="field"><label for="order">Порядность аккаунта</label><input id="order" type="number" min="0" max="12000" value="${state.values.order}"><small>ниже 9000 → +20%</small></div><div class="field"><label for="courtesy">Вежливость аккаунта</label><input id="courtesy" type="number" min="0" max="12000" value="${state.values.courtesy}"><small>ниже 6000 → +20% · 6000–7999 → +10%</small></div></div>`}
+ else if(s==='coaching'){$('#formArea').innerHTML=`<div class="form-grid"><div class="field"><label for="mmr">MMR клиента</label><input id="mmr" type="number" min="0" max="12000" value="${state.values.mmr}"><small>0–5629: 330 ₽ · 5630–6999: 500 ₽ · 7000+: 700 ₽</small></div><div class="field"><label for="hours">Количество часов</label><input id="hours" type="number" min="0.5" max="100" step="0.5" value="${state.values.hours}"><small>Можно указывать половину часа</small></div></div>`}
+ else{$('#formArea').innerHTML=`<div class="form-grid"><div class="field full"><label for="tier">Тир боевого кубка</label><select id="tier"><option value="3">3 тир — 200 ₽</option><option value="4">4 тир — 250 ₽</option><option value="5">5 тир — 300 ₽</option><option value="6">6 тир — 400 ₽</option><option value="7">7 тир — 500 ₽</option><option value="8">8 тир — 1 000 ₽</option></select><small>Услуга с передачей аккаунта</small></div></div>`;$('#tier').value=state.values.tier}
+ bindFields(); updateMetrics();}
+function bindFields(){document.querySelectorAll('#formArea input,#formArea select').forEach(el=>{el.addEventListener('input',onInput);el.addEventListener('change',onInput)})}
+function onInput(e){const el=e.target;if(el.dataset.addon){state.addons[el.dataset.addon]=el.checked;el.setAttribute('aria-checked',String(el.checked));}else if(el.id in state.values) state.values[el.id]=Number(el.value); const needsRerender=['mmr','current','target'].includes(el.id); if(needsRerender){const focusId=el.id;const selection=el.selectionStart;renderFields();const next=$(`#${focusId}`);next?.focus();if(typeof selection==='number')try{next.setSelectionRange(selection,selection)}catch{}} calculate()}
+function updateMetrics(){if(state.service==='solo'){const add=Math.abs(Number(state.values.target)-Number(state.values.current));const bands=SOLO_RATES.filter(([a,b])=>Math.min(Number(state.values.current),Number(state.values.target))<b&&Math.max(Number(state.values.current),Number(state.values.target))>a).length;$('#metricMmr').textContent=`+${fmt(add)} MMR`;$('#metricBands').textContent=String(bands)}}
+function coachingRate(m){return m>=7000?700:m>=5630?500:330} function battleRate(t){return({3:200,4:250,5:300,6:400,7:500,8:1000})[t]||0}
+function calculate(){const s=state.service;let total=0,base=0,pct=0,rows=[],route='';
+ if(s==='solo'){const a=clamp(state.values.current,0,9500),b=clamp(state.values.target,0,9500);base=progressive(a,b,SOLO_RATES);pct=D2Pricing.standardAddonPercent(Math.max(a,b),{...state.addons,lowOrder:state.addons.lowOrder,lowCourtesy:state.addons.lowCourtesy});if(state.addons.lowOrder&&state.values.order>=9000)pct-=.20;if(state.addons.lowCourtesy){pct-=state.values.courtesy<6000?.20:state.values.courtesy<8000?.10:0} total=base+base*pct;route=`${fmt(a)} → ${fmt(b)} MMR`;rows=[['Базовая стоимость',money(base)],['MMR к бусту',`+${fmt(Math.abs(b-a))}`],['Доплаты',pct?`+${Math.round(pct*100)}%`:'Нет'],['Стоимость доплат',money(base*pct)]]}
+ else if(s==='party'||s==='calibration'){const m=clamp(state.values.mmr,0,9500),wins=clamp(state.values.wins,0,1000),rate=rateFor(m,SERVICES[s].rates);base=rate*wins;pct=s==='party'?D2Pricing.partyAddonPercent(m,state.addons):D2Pricing.standardAddonPercent(m,state.addons);if(state.addons.lowOrder&&state.values.order>=9000)pct-=.20;if(state.addons.lowCourtesy)pct-=state.values.courtesy<6000?.20:state.values.courtesy<8000?.10:0;total=base+base*pct;route=`${fmt(m)} MMR · ${fmt(wins)} побед`;rows=[['Ставка',`${money(rate)} / вин`],['Победы',fmt(wins)],['Доплаты',pct?`+${Math.round(pct*100)}%`:'Нет'],['Стоимость доплат',money(base*pct)]]}
+ else if(s==='coaching'){const m=clamp(state.values.mmr,0,12000),h=Math.max(.5,Number(state.values.hours)||0);const rate=coachingRate(m);base=rate*h;total=base;route=`${fmt(m)} MMR · ${h.toLocaleString('ru-RU')} ч`;rows=[['Ставка',`${money(rate)} / час`],['Часы',h.toLocaleString('ru-RU')],['Формула',`${money(rate)} × ${h}`]]}
+ else{const tier=Number(state.values.tier)||3;base=battleRate(tier);total=base;route=`${tier} тир · передача аккаунта`;rows=[['Тир',`${tier} тир`],['Цена',money(base)],['Передача аккаунта','Да']]}
+ $('#chipPrice').textContent=s==='solo'?`${money(rateFor(Math.max(state.values.current,state.values.target),SOLO_RATES))} / 100 MMR`:s==='coaching'?`${money(coachingRate(state.values.mmr))} / час`:s==='battlecup'?`${money(base)} / заказ`:money(rateFor(state.values.mmr,SERVICES[s].rates))+' / вин'; $('#routeLine').textContent=route;$('#totalPrice').textContent=money(total);$('#resultNote').textContent=base>0?'Расчёт обновляется автоматически.':'Укажите корректные параметры.';$('#summary').innerHTML=rows.map((r,i)=>`<div class="summary-row ${i===rows.length-1?'accent':''}"><span>${r[0]}</span><strong>${r[1]}</strong></div>`).join('');updateTable()}
+function updateTable(){const s=state.service;$('#tableTitle').textContent=s==='solo'?'Ставки ММР буста':`Прайс — ${SERVICES[s].title}`;const head=$('#priceTableHead'),body=$('#priceTableBody');if(['solo','party','calibration'].includes(s)){const rates=SERVICES[s].rates;head.innerHTML='<th>Диапазон MMR</th><th>Ставка</th>';body.innerHTML=rates.map(([a,b,r])=>`<tr><td>${fmt(a)}–${fmt(b)}</td><td>${money(r)} / ${s==='solo'?'100 MMR':'вин'}</td></tr>`).join('');$('#tableHint').textContent=s==='solo'?'₽ / 100 MMR':'₽ / вин';return}if(s==='coaching'){head.innerHTML='<th>MMR</th><th>Ставка</th>';body.innerHTML='<tr><td>0–5629</td><td>330 ₽ / час</td></tr><tr><td>5630–6999</td><td>500 ₽ / час</td></tr><tr><td>7000+</td><td>700 ₽ / час</td></tr>';$('#tableHint').textContent='₽ / час';return}head.innerHTML='<th>Тир</th><th>Цена</th><th>Формат</th>';body.innerHTML=[[3,200],[4,250],[5,300],[6,400],[7,500],[8,1000]].map(x=>`<tr><td>${x[0]} тир</td><td>${money(x[1])}</td><td>С передачей</td></tr>`).join('');$('#tableHint').textContent='₽ / заказ'}
+function switchService(s){state.service=s;document.querySelectorAll('.service-tab').forEach(b=>b.classList.toggle('active',b.dataset.service===s));renderFields();calculate();window.scrollTo({top:document.querySelector('.service-nav').offsetTop-12,behavior:'smooth'})}
+function reset(){state.service='solo';state.values={...DEFAULT};state.addons={};switchService('solo')}
+function buildOrderText(){const addons=[];document.querySelectorAll('[data-addon]:checked').forEach(i=>addons.push(i.getAttribute('aria-label')));return [`Dota Boost Calculator`, `Услуга: ${SERVICES[state.service].title}`,$('#routeLine').textContent,...addons.length?[`Доплаты: ${addons.join(', ')}`]:[],`Итого: ${$('#totalPrice').textContent}`].flat().join('\n')}
+function orderTelegram(){const text=encodeURIComponent(buildOrderText());window.open(`https://t.me/share/url?url=${encodeURIComponent(location.href)}&text=${text}`,'_blank','noopener')}
+async function copyCalc(){try{await navigator.clipboard.writeText(buildOrderText());$('#copyStatus').textContent='Расчёт скопирован';setTimeout(()=>$('#copyStatus').textContent='',1800)}catch{$('#copyStatus').textContent='Не удалось скопировать'}}
+document.querySelectorAll('.service-tab').forEach(b=>b.addEventListener('click',()=>switchService(b.dataset.service)));$('#resetBtn').addEventListener('click',reset);$('#copyBtn').addEventListener('click',copyCalc);$('#orderBtn').addEventListener('click',orderTelegram);renderFields();calculate();

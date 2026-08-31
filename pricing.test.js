@@ -1,0 +1,24 @@
+const assert = require('assert');
+const vm = require('vm');
+const fs = require('fs');
+const code = fs.readFileSync(__dirname + '/pricing.js', 'utf8');
+const ctx = { window: {} };
+vm.runInNewContext(code, ctx);
+const p = ctx.window.D2Pricing;
+
+assert.strictEqual(p.partyAddonPercent(5000, { doubles: true }), 0.50);
+assert.strictEqual(p.partyAddonPercent(5619, { doubles: true }), 0.50);
+assert.strictEqual(p.partyAddonPercent(5620, { doubles: true }), 0.30);
+assert.strictEqual(p.standardAddonPercent(5620, { core: true }), 1.00);
+assert.strictEqual(p.standardAddonPercent(5619, { core: true }), 0);
+assert.strictEqual(p.standardAddonPercent(4500, { lowOrder: true }), 0.20);
+assert.strictEqual(p.standardAddonPercent(9000, { lowOrder: true }), 0);
+assert.strictEqual(p.standardAddonPercent(5999, { lowCourtesy: true }), 0.20);
+assert.strictEqual(p.standardAddonPercent(6000, { lowCourtesy: true }), 0.10);
+assert.strictEqual(p.standardAddonPercent(7999, { lowCourtesy: true }), 0.10);
+assert.strictEqual(p.standardAddonPercent(8000, { lowCourtesy: true }), 0);
+assert.strictEqual(p.standardAddonPercent(3500, { smurfpool: true }), 0.15);
+assert.strictEqual(p.standardAddonPercent(3499, { smurfpool: true }), 0);
+assert.strictEqual(p.standardAddonPercent(5000, { smurfAccount: true }), 0.15);
+assert.strictEqual(p.standardAddonPercent(3000, { core: true, lowOrder: true, lowCourtesy: true }), 0.40);
+console.log('pricing v2 tests passed');
