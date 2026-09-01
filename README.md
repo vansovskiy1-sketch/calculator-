@@ -14,3 +14,8 @@
 
 ## Telegram
 Кнопка заказа использует Telegram Share, поэтому никакой username администратора в коде не требуется. Пользователь сможет выбрать чат и отправить сформированный расчёт.
+
+## v2.1 input UX
+- Numeric fields use mobile-friendly numeric keyboards.
+- Custom − / + steppers make MMR, wins, hours, behavior score and other values easier to edit.
+- MMR changes no longer rebuild the form on every keystroke, so cursor/focus stays stable while typing.
