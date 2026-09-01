@@ -1,21 +1,23 @@
-# Dota 2 Boost Calculator v2
+# Dota 2 Boost Calculator v3
 
-Статический калькулятор для GitHub Pages.
+Static client-side calculator for GitHub Pages.
 
-## Файлы
-- `index.html` — интерфейс
-- `style.css` — дизайн и адаптивность
-- `app.js` — услуги, расчёты и Telegram/share
-- `pricing.js` — логика доплат
-- `tests/pricing.test.js` — проверки тарифной логики
+## Included
+- MMR boost with progressive pricing by MMR range
+- Party boost by wins
+- Account calibration by wins
+- Coaching by hours
+- Battle Cup by tier
+- Always-available core role addon: +100%
+- Party doubles: <5620 MMR +50%, >=5620 MMR +30%
+- Smurfpool and smurf account: +15% from 3500 MMR
+- Low order: +20% below 9000
+- Low courtesy: +20% below 6000, +10% at 6000–7999
+- Numeric steppers and quick presets
+- Transparent addon breakdown
+- Telegram order message
+- Recent calculation history in browser storage
+- Responsive mobile layout with sticky result card
 
 ## GitHub Pages
-Загрузите файлы в корень репозитория. В Settings → Pages выберите `Deploy from a branch`, ветку `main` и папку `/ (root)`.
-
-## Telegram
-Кнопка заказа использует Telegram Share, поэтому никакой username администратора в коде не требуется. Пользователь сможет выбрать чат и отправить сформированный расчёт.
-
-## v2.1 input UX
-- Numeric fields use mobile-friendly numeric keyboards.
-- Custom − / + steppers make MMR, wins, hours, behavior score and other values easier to edit.
-- MMR changes no longer rebuild the form on every keystroke, so cursor/focus stays stable while typing.
+Upload the contents of this folder to the repository root and set Pages to deploy from the `main` branch root folder.
