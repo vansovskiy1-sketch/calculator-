@@ -1,23 +1,13 @@
-# Dota 2 Boost Calculator v3
+# Dota 2 Boost Calculator v3.1
 
-Static client-side calculator for GitHub Pages.
+Статический калькулятор для GitHub Pages.
 
-## Included
-- MMR boost with progressive pricing by MMR range
-- Party boost by wins
-- Account calibration by wins
-- Coaching by hours
-- Battle Cup by tier
-- Always-available core role addon: +100%
-- Party doubles: <5620 MMR +50%, >=5620 MMR +30%
-- Smurfpool and smurf account: +15% from 3500 MMR
-- Low order: +20% below 9000
-- Low courtesy: +20% below 6000, +10% at 6000–7999
-- Numeric steppers and quick presets
-- Transparent addon breakdown
-- Telegram order message
-- Recent calculation history in browser storage
-- Responsive mobile layout with sticky result card
+## v3.1
+- Убраны дублирующие переключатели «Низкая порядность» и «Низкая вежливость».
+- Доплаты за порядность и вежливость рассчитываются автоматически по введённым значениям.
+- Оставлен один переключатель «Смурфпулл» (+15% от 3500 MMR).
+- «Игра на кор роли» всегда доступна и даёт +100%.
+- В пати-бусте двойной жетон: до 5620 MMR +50%, от 5620 MMR +30%.
 
-## GitHub Pages
-Upload the contents of this folder to the repository root and set Pages to deploy from the `main` branch root folder.
+## Установка
+Загрузите содержимое этой папки в корень GitHub-репозитория и включите GitHub Pages на ветке `main`, папка `/ (root)`.
