@@ -1,4 +1,5 @@
 (function (global) {
+  const PARTY_RATES = [[0,2000,70],[2000,3000,80],[3000,4000,90],[4000,4500,110],[4500,5000,150],[5000,5620,180],[5620,6000,250],[6000,6500,400],[6500,7000,750],[7000,7500,1000],[7500,8000,2000],[8000,8500,3000],[8500,9000,4000],[9000,9500,5000]];
   const ADDON_RULES = {
     doubles: { partyBefore5620: 0.50, after5620: 0.30 },
     core: { always: true, percent: 1.00 },
@@ -31,6 +32,48 @@
     return pct;
   }
 
+
+  function partyRateFor(mmr) {
+    const n = Number(mmr) || 0;
+    const hit = PARTY_RATES.find(([a, b]) => n >= a && n < b);
+    return hit ? hit[2] : PARTY_RATES[PARTY_RATES.length - 1][2];
+  }
+
+  function partyGain(mmr, doubles) {
+    return (Number(mmr) < 4000 ? 40 : 25) * (doubles ? 2 : 1);
+  }
+
+  function partyBreakdown(startMmr, wins, doubles) {
+    let mmr = Math.max(0, Number(startMmr) || 0);
+    const totalGames = Math.max(0, Math.floor(Number(wins) || 0));
+    const segments = [];
+    let totalCost = 0;
+    for (let game = 0; game < totalGames; game += 1) {
+      const gain = partyGain(mmr, doubles);
+      const rate = partyRateFor(mmr);
+      const next = mmr + gain;
+      const key = `${rate}|${mmr < 4000 ? 'low' : 'high'}`;
+      const last = segments[segments.length - 1];
+      if (last && last.key === key) {
+        last.to = next;
+        last.gain += gain;
+        last.games += 1;
+        last.cost += rate;
+      } else {
+        segments.push({ key, from: mmr, to: next, gain, games: 1, rate, cost: rate });
+      }
+      totalCost += rate;
+      mmr = next;
+    }
+    return {
+      startMmr: Math.max(0, Number(startMmr) || 0),
+      endMmr: mmr,
+      totalGames,
+      totalCost,
+      segments: segments.map(({key, ...segment}) => segment)
+    };
+  }
+
   function addonBreakdown(mmrValue, addons, service, order, courtesy) {
     const mmr = Number(mmrValue) || 0;
     const a = addons || {};
@@ -50,6 +93,8 @@
     addonPercent: (mmr, addons, service, order, courtesy) => addonPercent(mmr, addons, service, order, courtesy),
     standardAddonPercent: (mmr, addons, order, courtesy) => addonPercent(mmr, addons, 'standard', order, courtesy),
     partyAddonPercent: (mmr, addons, order, courtesy) => addonPercent(mmr, addons, 'party', order, courtesy),
-    addonBreakdown
+    addonBreakdown,
+    partyBreakdown,
+    partyGain
   };
 })(window);
