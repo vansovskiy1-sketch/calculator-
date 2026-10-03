@@ -1,9 +1,87 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#08090d"><meta name="description" content="Dota 2 Boost Calculator — прозрачный расчёт стоимости буста, пати, калибровки, коучинга и боевого кубка."><title>Dota 2 Boost Calculator v3.3</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body><div class="ambient a"></div><div class="ambient b"></div>
-<main class="shell"><header class="topbar"><a class="brand" href="#" aria-label="Dota Boost Calculator"><span class="brand-mark">D2</span><span><strong>DOTA BOOST</strong><small>PRICE CALCULATOR</small></span></a><div class="top-actions"><span class="status"><i></i> Онлайн</span><button class="icon-button" id="resetBtn" title="Сбросить">↺</button></div></header>
-<section class="hero"><div class="eyebrow"><span>01</span> DOTA 2 SERVICES <b>V3.3</b></div><h1>Рассчитай стоимость<br><em>за несколько кликов.</em></h1><p>Прозрачный расчёт, умные доплаты и готовый заказ в Telegram.</p><div class="trust-row"><span>⚡ Мгновенный расчёт</span><span>✓ Все доплаты учтены</span><span>↗ Готовый заказ</span></div></section>
-<nav class="service-nav" aria-label="Услуги"><button class="service-tab active" data-service="solo"><span class="num">01</span><span>ММР буст</span><small>Плавный рост</small></button><button class="service-tab" data-service="party"><span class="num">02</span><span>Пати буст</span><small>С клиентом</small></button><button class="service-tab" data-service="calibration"><span class="num">03</span><span>Калибровка</span><small>Передача аккаунта</small></button><button class="service-tab" data-service="coaching"><span class="num">04</span><span>Коучинг</span><small>Индивидуально</small></button><button class="service-tab" data-service="battlecup"><span class="num">05</span><span>Боевой кубок</span><small>С передачей</small></button></nav>
-<section class="workspace"><div class="panel configurator"><div class="panel-header"><div><div class="kicker">НАСТРОЙКА</div><h2 id="serviceTitle">ММР буст</h2><p id="serviceSubtitle">Плавный рост</p></div><div class="rate-badge" id="chipPrice">—</div></div><div id="formArea"></div></div>
-<aside class="panel result-card is-sticky"><div class="result-header"><div class="kicker">ВАШ РАСЧЁТ</div><span class="pill">READY</span></div><div class="result-route" id="routeLine">—</div><div class="total-label">ИТОГО</div><div class="total-price" id="totalPrice">0 ₽</div><div class="total-note" id="resultNote">—</div><div class="breakdown" id="summary"></div><button class="order-button" id="orderBtn"><span>Оформить заказ в Telegram</span><b>↗</b></button><button class="secondary-button" id="copyBtn">Скопировать расчёт</button><button class="ghost-button" id="saveCalcBtn">Сохранить в историю</button><div class="copy-status" id="copyStatus" aria-live="polite"></div><div class="mini-tip"><span>i</span><p>Цена предварительная. Финальная стоимость фиксируется после подтверждения заказа.</p></div></aside></section>
-<section class="history-panel panel"><div class="panel-header compact"><div><div class="kicker">ИСТОРИЯ</div><h2>Последние расчёты</h2></div><span class="table-hint">Сохраняется в браузере</span></div><div id="historyList" class="history-list"></div></section>
-<section class="quick-grid"><article><span class="quick-icon">01</span><strong>Цена за секунды</strong><p>Без ручных вычислений и скрытых надбавок.</p></article><article><span class="quick-icon">02</span><strong>Умные условия</strong><p>MMR, порядность и вежливость учитываются автоматически.</p></article><article><span class="quick-icon">03</span><strong>Заказ одним кликом</strong><p>Готовый расчёт сразу отправляется в Telegram.</p></article></section>
-<section class="panel price-panel"><div class="panel-header compact"><div><div class="kicker">ТАРИФЫ</div><h2 id="tableTitle">Тарифы ММР буста</h2></div><div class="table-hint" id="tableHint">₽ / 100 MMR</div></div><div class="table-scroll"><table><thead><tr id="priceTableHead"></tr></thead><tbody id="priceTableBody"></tbody></table></div></section><footer><span>© Dota Boost Calculator v3.3</span><span>Работает прямо в браузере · без регистрации</span></footer></main><script src="pricing.js"></script><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08090d">
+<meta name="description" content="Dota 2 Boost Calculator — прозрачный расчёт стоимости буста, пати, калибровки, коучинга и боевого кубка.">
+<title>Dota 2 Boost Calculator v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="ambient a"></div><div class="ambient b"></div>
+<main class="shell">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Dota Boost Calculator">
+      <span class="brand-mark">D2</span>
+      <span><strong>DOTA BOOST</strong><small>PRICE CALCULATOR</small></span>
+    </a>
+    <div class="top-actions"><span class="status"><i></i> Онлайн</span><button class="icon-button" id="resetBtn" title="Сбросить">↺</button></div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow"><span>01</span> DOTA 2 SERVICES <b>V4</b></div>
+    <h1>Рассчитай стоимость<br><em>за несколько кликов.</em></h1>
+    <p>Прозрачный расчёт, понятные доплаты и готовый заказ в Telegram.</p>
+    <div class="trust-row"><span>⚡ Мгновенный расчёт</span><span>✓ Все доплаты учтены</span><span>↗ Готовый заказ</span></div>
+  </section>
+
+  <nav class="service-nav" aria-label="Услуги">
+    <button class="service-tab active" data-service="solo"><span class="num">01</span><span>ММР буст</span><small>Плавный рост</small></button>
+    <button class="service-tab" data-service="party"><span class="num">02</span><span>Пати буст</span><small>С клиентом</small></button>
+    <button class="service-tab" data-service="calibration"><span class="num">03</span><span>Калибровка</span><small>Передача аккаунта</small></button>
+    <button class="service-tab" data-service="coaching"><span class="num">04</span><span>Коучинг</span><small>Индивидуально</small></button>
+    <button class="service-tab" data-service="battlecup"><span class="num">05</span><span>Боевой кубок</span><small>С передачей</small></button>
+  </nav>
+
+  <section class="workspace">
+    <div class="panel configurator">
+      <div class="panel-header">
+        <div><div class="kicker">НАСТРОЙКА</div><h2 id="serviceTitle">ММР буст</h2><p id="serviceSubtitle">Плавный рост</p></div>
+        <div class="rate-badge" id="chipPrice">—</div>
+      </div>
+      <div class="form-steps" aria-label="Шаги расчёта">
+        <span class="step active"><b>01</b> Параметры</span><span class="step"><b>02</b> Условия</span><span class="step"><b>03</b> Аккаунт</span>
+      </div>
+      <div id="formArea"></div>
+    </div>
+
+    <aside class="panel result-card is-sticky">
+      <div class="result-header"><div class="kicker">ВАШ РАСЧЁТ</div><span class="pill">READY</span></div>
+      <div class="result-route" id="routeLine">—</div>
+      <div class="total-label">ИТОГО</div><div class="total-price" id="totalPrice">0 ₽</div>
+      <div class="total-note" id="resultNote">—</div>
+      <div class="breakdown-preview" id="summaryPreview"></div>
+      <button class="breakdown-toggle" id="breakdownToggle" type="button" aria-expanded="false"><span>Подробнее о цене</span><b>⌄</b></button>
+      <div class="breakdown-detail" id="summaryDetail" hidden></div>
+      <button class="order-button" id="orderBtn"><span>Оформить заказ в Telegram</span><b>↗</b></button>
+      <button class="secondary-button" id="copyBtn">Скопировать расчёт</button>
+      <button class="ghost-button" id="saveCalcBtn">Сохранить в историю</button>
+      <div class="copy-status" id="copyStatus" aria-live="polite"></div>
+      <div class="mini-tip"><span>i</span><p>Цена предварительная. Финальная стоимость фиксируется после подтверждения заказа.</p></div>
+    </aside>
+  </section>
+
+  <section class="history-panel panel"><div class="panel-header compact"><div><div class="kicker">ИСТОРИЯ</div><h2>Последние расчёты</h2></div><span class="table-hint">Сохраняется в браузере</span></div><div id="historyList" class="history-list"></div></section>
+  <section class="quick-grid"><article><span class="quick-icon">01</span><strong>Цена за секунды</strong><p>Без ручных вычислений и скрытых надбавок.</p></article><article><span class="quick-icon">02</span><strong>Умные условия</strong><p>MMR, порядность и вежливость учитываются автоматически.</p></article><article><span class="quick-icon">03</span><strong>Заказ одним кликом</strong><p>Готовый расчёт сразу отправляется в Telegram.</p></article></section>
+  <section class="panel price-panel"><div class="panel-header compact"><div><div class="kicker">ТАРИФЫ</div><h2 id="tableTitle">Тарифы ММР буста</h2></div><div class="table-hint" id="tableHint">₽ / 100 MMR</div></div><div class="table-scroll"><table><thead><tr id="priceTableHead"></tr></thead><tbody id="priceTableBody"></tbody></table></div></section>
+  <footer><span>© Dota Boost Calculator v4</span><span>Работает прямо в браузере · без регистрации</span></footer>
+</main>
+
+<div class="modal" id="orderModal" aria-hidden="true">
+  <div class="modal-backdrop" data-close-modal></div>
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalClose" type="button" aria-label="Закрыть">×</button>
+    <div class="kicker">ПРОВЕРЬТЕ ЗАКАЗ</div>
+    <h2 id="modalTitle">Перед отправкой в Telegram</h2>
+    <div class="modal-summary" id="modalSummary"></div>
+    <div class="modal-total"><span>Итого</span><strong id="modalTotal">0 ₽</strong></div>
+    <div class="modal-actions"><button class="secondary-button" id="modalCancel" type="button">Вернуться</button><button class="order-button" id="modalConfirm" type="button"><span>Отправить в Telegram</span><b>↗</b></button></div>
+  </section>
+</div>
+<script src="pricing.js"></script><script src="app.js"></script>
+</body>
+</html>
