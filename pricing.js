@@ -54,6 +54,16 @@
     return progressiveBreakdown(start, target, rates).length;
   }
 
+  const SOLO_MMR_PER_WIN = 30;
+
+  function soloWinEstimate(startMmr, targetMmr, mmrPerWin = SOLO_MMR_PER_WIN) {
+    const start = Math.max(0, Number(startMmr) || 0);
+    const target = Math.max(0, Number(targetMmr) || 0);
+    const gain = Math.max(1, Number(mmrPerWin) || SOLO_MMR_PER_WIN);
+    const delta = Math.max(0, target - start);
+    return delta === 0 ? 0 : Math.ceil(delta / gain);
+  }
+
   function partyRateFor(mmr) {
     const n = Number(mmr) || 0;
     const hit = PARTY_RATES.find(([a, b]) => n >= a && n < b);
@@ -120,6 +130,8 @@
     SOLO_RATES,
     PARTY_RATES,
     partyBreakdown,
-    partyGain
+    partyGain,
+    SOLO_MMR_PER_WIN,
+    soloWinEstimate
   };
 })(window);

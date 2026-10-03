@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090d">
 <meta name="description" content="Dota 2 Boost Calculator — прозрачный расчёт стоимости буста, пати, калибровки, коучинга и боевого кубка.">
-<title>Dota 2 Boost Calculator v4</title>
+<title>Dota 2 Boost Calculator v6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
   </header>
 
   <section class="hero">
-    <div class="eyebrow"><span>01</span> DOTA 2 SERVICES <b>V4</b></div>
+    <div class="eyebrow"><span>01</span> DOTA 2 SERVICES <b>V6</b></div>
     <h1>Рассчитай стоимость<br><em>за несколько кликов.</em></h1>
     <p>Прозрачный расчёт, понятные доплаты и готовый заказ в Telegram.</p>
     <div class="trust-row"><span>⚡ Мгновенный расчёт</span><span>✓ Все доплаты учтены</span><span>↗ Готовый заказ</span></div>
@@ -57,7 +57,7 @@
       <div class="breakdown-preview" id="summaryPreview"></div>
       <button class="breakdown-toggle" id="breakdownToggle" type="button" aria-expanded="false"><span>Подробнее о цене</span><b>⌄</b></button>
       <div class="breakdown-detail" id="summaryDetail" hidden></div>
-      <button class="order-button" id="orderBtn"><span>Оформить заказ в Telegram</span><b>↗</b></button>
+      <button class="order-button" id="orderBtn"><span>Проверить заказ</span><b>↗</b></button>
       <button class="secondary-button" id="copyBtn">Скопировать расчёт</button>
       <button class="ghost-button" id="saveCalcBtn">Сохранить в историю</button>
       <div class="copy-status" id="copyStatus" aria-live="polite"></div>
@@ -68,7 +68,7 @@
   <section class="history-panel panel"><div class="panel-header compact"><div><div class="kicker">ИСТОРИЯ</div><h2>Последние расчёты</h2></div><span class="table-hint">Сохраняется в браузере</span></div><div id="historyList" class="history-list"></div></section>
   <section class="quick-grid"><article><span class="quick-icon">01</span><strong>Цена за секунды</strong><p>Без ручных вычислений и скрытых надбавок.</p></article><article><span class="quick-icon">02</span><strong>Умные условия</strong><p>MMR, порядность и вежливость учитываются автоматически.</p></article><article><span class="quick-icon">03</span><strong>Заказ одним кликом</strong><p>Готовый расчёт сразу отправляется в Telegram.</p></article></section>
   <section class="panel price-panel"><div class="panel-header compact"><div><div class="kicker">ТАРИФЫ</div><h2 id="tableTitle">Тарифы ММР буста</h2></div><div class="table-hint" id="tableHint">₽ / 100 MMR</div></div><div class="table-scroll"><table><thead><tr id="priceTableHead"></tr></thead><tbody id="priceTableBody"></tbody></table></div></section>
-  <footer><span>© Dota Boost Calculator v4</span><span>Работает прямо в браузере · без регистрации</span></footer>
+  <footer><span>© Dota Boost Calculator v6</span><span>Работает прямо в браузере · без регистрации</span></footer>
 </main>
 
 <div class="modal" id="orderModal" aria-hidden="true">
@@ -76,10 +76,11 @@
   <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <button class="modal-close" id="modalClose" type="button" aria-label="Закрыть">×</button>
     <div class="kicker">ПРОВЕРЬТЕ ЗАКАЗ</div>
+    <div class="modal-ref-row"><span>Номер заказа</span><strong id="modalRef">—</strong></div>
     <h2 id="modalTitle">Перед отправкой в Telegram</h2>
     <div class="modal-summary" id="modalSummary"></div>
     <div class="modal-total"><span>Итого</span><strong id="modalTotal">0 ₽</strong></div>
-    <div class="modal-actions"><button class="secondary-button" id="modalCancel" type="button">Вернуться</button><button class="order-button" id="modalConfirm" type="button"><span>Отправить в Telegram</span><b>↗</b></button></div>
+    <div class="modal-actions"><button class="secondary-button" id="modalCancel" type="button">Вернуться</button><button class="order-button" id="modalConfirm" type="button"><span>Подтвердить и открыть Telegram</span><b>↗</b></button></div>
   </section>
 </div>
 <script src="pricing.js"></script><script src="app.js"></script>
